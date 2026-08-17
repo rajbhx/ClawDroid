@@ -38,7 +38,7 @@ class JsBridge(
     }
 
     @JavascriptInterface
-    fun switchSession(id: String) = activity.runOnUiThread { sessionManager.switchSession(id) }
+    fun switchSession(id: String) { = activity.runOnUiThread { sessionManager.switchSession(id) }
 
     @JavascriptInterface
     fun closeSession(id: String) { sessionManager.closeSession(id) }

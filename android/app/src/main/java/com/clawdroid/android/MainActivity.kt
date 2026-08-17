@@ -60,6 +60,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    @SuppressLint("SetJavaScriptEnabled")
     private fun setupWebView() {
         binding.webView.settings.apply {
             javaScriptEnabled = true
@@ -69,7 +70,9 @@ class MainActivity : AppCompatActivity() {
             useWideViewPort = true
             loadWithOverviewMode = true
             cacheMode = WebSettings.LOAD_DEFAULT
-            setWebContentsDebuggingEnabled(true)
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.KITKAT) {
+                WebView.setWebContentsDebuggingEnabled(true)
+            }
         }
         binding.webView.webViewClient = WebViewClient()
         binding.webView.webChromeClient = WebChromeClient()
@@ -177,6 +180,8 @@ class MainActivity : AppCompatActivity() {
         override fun onTerminalCursorStateChange(state: Boolean) {}
         override fun setTerminalShellPid(session: TerminalSession, pid: Int) {}
         override fun onSessionFinished(session: TerminalSession) {}
+        override fun onCopyTextToClipboard(session: TerminalSession, text: String) {}
+        override fun onPasteTextFromClipboard(session: TerminalSession?) {}
         override fun getTerminalCursorStyle(): Int = 0
         override fun logError(tag: String, message: String) { AppLogger.e(tag, message) }
         override fun logWarn(tag: String, message: String) { AppLogger.w(tag, message) }

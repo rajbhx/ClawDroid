@@ -211,3 +211,141 @@ All running inside a Termux bootstrap with GPU acceleration.
 - OmO: https://github.com/code-yeongyu/oh-my-openagent
 - LazyCodex: https://github.com/code-yeongyu/lazycodex
 
+
+---
+
+## 📊 PROJECT TRACKER — Live Roadmap
+
+> **Last updated**: 2026-08-17
+> **Status**: Phase 1 IN PROGRESS — Scaffold + Core
+> **Build**: GitHub Actions (never build locally)
+> **Repo**: https://github.com/rajbhx/ClawDroid
+
+### Phase 1 — Scaffold & Core
+
+| # | Task | Status | Commit | Notes |
+|---|------|--------|--------|-------|
+| 1 | Create GitHub repo | ✅ DONE | — | rajbhx/ClawDroid |
+| 2 | Fork openclaw-android architecture | ✅ DONE | e0f02db | 37 files, 2049 lines |
+| 3 | Copy terminal-emulator sources | ✅ DONE | 334fd68 | 14 Java files from Termux |
+| 4 | Copy terminal-view sources | ✅ DONE | 334fd68 | 8 Java files from Termux |
+| 5 | Add Gradle wrapper | ✅ DONE | 1ac5277 | gradlew + jar |
+| 6 | Fix compileSdk (34→35) | ✅ DONE | b50547c | Dependencies require 35 |
+| 7 | Fix terminal-emulator annotation | ✅ DONE | e3173db | androidx.annotation dep |
+| 8 | Fix terminal-view resources | ✅ DONE | 1f471d9 | strings + drawables |
+| 9 | Fix Kotlin compilation errors | ✅ DONE | 0f10eb0 | JsBridge + MainActivity |
+| 10 | GitHub Actions build green | 🔄 IN PROGRESS | — | Waiting for CI |
+| 11 | Create core-model module | ⏳ PENDING | — | Domain entities |
+| 12 | Create core-common module | ⏳ PENDING | — | Utilities |
+| 13 | Create core-network module | ⏳ PENDING | — | OmniRoute client |
+| 14 | Create app module with Hilt | ⏳ PENDING | — | DI setup |
+| 15 | Create navigation system | ⏳ PENDING | — | Compose Nav |
+
+### Phase 2 — AI Chat (Core Feature)
+
+| # | Task | Status | Notes |
+|---|------|--------|-------|
+| 1 | OmniRoute API client (Retrofit + SSE) | ⏳ PENDING | 340+ providers |
+| 2 | Chat UI (message list, input, model picker) | ⏳ PENDING | Compose |
+| 3 | Provider management screen | ⏳ PENDING | API key storage |
+| 4 | Code block rendering | ⏳ PENDING | Syntax highlighting |
+| 5 | Streaming response display | ⏳ PENDING | Real-time SSE |
+| 6 | Multi-model support | ⏳ PENDING | OpenAI, Anthropic, Google |
+
+### Phase 3 — Terminal (Differentiator)
+
+| # | Task | Status | Notes |
+|---|------|--------|-------|
+| 1 | JNI bridge for PTY | ⏳ PENDING | fork/exec |
+| 2 | Terminal emulator view | ⏳ PENDING | ANSI colors |
+| 3 | Tab management | ⏳ PENDING | Multi-session |
+| 4 | Keyboard shortcuts | ⏳ PENDING | ESC, CTRL, ALT |
+| 5 | Chat integration | ⏳ PENDING | AI → terminal |
+
+### Phase 4 — Memory (Power Feature)
+
+| # | Task | Status | Notes |
+|---|------|--------|-------|
+| 1 | Room database schema | ⏳ PENDING | Wings/rooms/drawers |
+| 2 | ONNX Runtime integration | ⏳ PENDING | Local embeddings |
+| 3 | Semantic search | ⏳ PENDING | Vector similarity |
+| 4 | Memory browser UI | ⏳ PENDING | Compose |
+| 5 | MemPalace server sync | ⏳ PENDING | Optional remote |
+
+### Phase 5 — Editor & Agent (Advanced)
+
+| # | Task | Status | Notes |
+|---|------|--------|-------|
+| 1 | Code editor component | ⏳ PENDING | Syntax highlighting |
+| 2 | Agent mode | ⏳ PENDING | Tool use + approval |
+| 3 | File browser | ⏳ PENDING | Project files |
+| 4 | Git integration | ⏳ PENDING | Via terminal |
+
+### Phase 6 — Polish & Ship
+
+| # | Task | Status | Notes |
+|---|------|--------|-------|
+| 1 | ProGuard rules | ⏳ PENDING | OkHttp, Room, ONNX |
+| 2 | Adaptive icons | ⏳ PENDING | |
+| 3 | Splash screen | ⏳ PENDING | |
+| 4 | E2E tests | ⏳ PENDING | |
+| 5 | Release signing | ⏳ PENDING | |
+| 6 | First tagged release | ⏳ PENDING | v1.0.0 |
+
+---
+
+### 🏗️ Build Log (GitHub Actions)
+
+| Run | Commit | Status | Duration | Error |
+|-----|--------|--------|----------|-------|
+| 32043662309 | e0f02db | ❌ FAILED | 35s | Missing gradlew |
+| 32043788013 | 334fd68 | ❌ FAILED | 1m25s | compileSdk 34→35 |
+| 32043830005 | 1ac5277 | ❌ FAILED | 2m34s | Missing annotation dep |
+| 32044006279 | b50547c | ❌ FAILED | 1m33s | Missing string/drawable resources |
+| 32044304756 | 1f471d9 | ❌ FAILED | 2m14s | Kotlin compilation errors |
+| 32044500000 | 0f10eb0 | 🔄 RUNNING | — | Fixed JsBridge + MainActivity |
+
+---
+
+### 📁 File Inventory
+
+**Kotlin (13 files):**
+- `MainActivity.kt` — Main entry (195 lines)
+- `AgentBridge.kt` — Agent bridge (148 lines)
+- `BootstrapManager.kt` — Bootstrap (205 lines)
+- `JsBridge.kt` — WebView bridge
+- `EnvironmentBuilder.kt` — Env setup
+- `EventBridge.kt` — Event dispatch
+- `TerminalSessionManager.kt` — Multi-session
+- `CommandRunner.kt` — Shell exec
+- `GpuDetector.kt` — GPU detection
+- `UrlResolver.kt` — URL resolution
+- `ClawdroidService.kt` — Foreground service
+- `BootReceiver.kt` — Boot auto-start
+- `AppLogger.kt` — Logging
+
+**Java (22 files):**
+- terminal-emulator: 14 files (TerminalSession, TerminalEmulator, JNI, etc.)
+- terminal-view: 8 files (TerminalView, TerminalRenderer, etc.)
+
+**Build (8 files):**
+- build.gradle.kts (root + app)
+- libs.versions.toml
+- settings.gradle.kts
+- gradle.properties
+- gradle-wrapper.properties
+- gradlew + gradlew.bat
+
+**Scripts (3 files):**
+- detect-gpu.sh
+- install-gpu-packages.sh
+- start-gpu-server.sh
+
+**CI/CD (2 files):**
+- build.yml
+- release.yml
+
+**Docs (2 files):**
+- README.md
+- PLAYBOOK.md
+
