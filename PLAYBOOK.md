@@ -33,10 +33,6 @@ All running inside a Termux bootstrap with GPU acceleration.
 | `termux/termux-app` | ★59K | Java | Terminal emulator |
 | `termux/termux-packages` | ★16.8K | Shell | Bootstrap build system |
 | `termux/termux-api` | ★4.2K | Java | Android API access |
-| `Yeachan-Heo/oh-my-codex` | ★32K | TypeScript | OmX workflow layer |
-| `code-yeongyu/oh-my-openagent` | — | TypeScript | Multi-agent coordination |
-| `code-yeongyu/lazycodex` | ★3.2K | TypeScript | Production agent harness |
-| `Yeachan-Heo/gajae-code` | ★2.5K | — | Gajae Code MVP |
 
 ---
 
@@ -48,249 +44,121 @@ All running inside a Termux bootstrap with GPU acceleration.
 │                                                              │
 │  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌───────────────┐  │
 │  │ Chat UI  │ │ Terminal │ │ Memory   │ │ Settings      │  │
-│  │ (React)  │ │ (Termux) │ │ (React)  │ │ (React)       │  │
+│  │ (Compose)│ │ (View)   │ │ (Compose)│ │ (Compose)     │  │
 │  └────┬─────┘ └────┬─────┘ └────┬─────┘ └───────┬───────┘  │
 │       │            │            │                │           │
 │  ┌────▼────────────▼────────────▼────────────────▼───────┐  │
-│  │         EventBridge (Kotlin ↔ WebView ↔ Node.js)      │  │
+│  │         Navigation (Compose Nav + Bottom Bar)         │  │
 │  └────┬────────────┬────────────┬────────────────┬───────┘  │
 │       │            │            │                │           │
 │  ┌────▼────────────▼────────────▼────────────────▼───────┐  │
-│  │              Node.js Runtime (glibc bootstrap)         │  │
-│  │                                                        │  │
+│  │              ViewModels (Hilt @HiltViewModel)         │  │
+│  │  ChatViewModel | MemoryVM | SettingsVM | AgentHubVM   │  │
+│  └────┬────────────┬────────────┬────────────────┬───────┘  │
+│       │            │            │                │           │
+│  ┌────▼────────────▼────────────▼────────────────▼───────┐  │
+│  │                    Data Layer                          │  │
 │  │  ┌──────────────┐ ┌──────────────┐ ┌──────────────┐  │  │
-│  │  │ OpenClaw     │ │ Claw Code    │ │ OpenCode     │  │  │
-│  │  │ (651+ files) │ │ (3 components)│ │ (20+ tools)  │  │  │
-│  │  └──────┬───────┘ └──────┬───────┘ └──────┬───────┘  │  │
-│  │         │                │                 │           │  │
-│  │  ┌──────▼────────────────▼─────────────────▼───────┐  │  │
-│  │  │  OmniRoute Provider Router (340+ providers)     │  │  │
-│  │  └─────────────────────────────────────────────────┘  │  │
-│  └────────────────────────────────────────────────────────┘  │
-│                                                              │
-│  ┌────────────────────────────────────────────────────────┐  │
-│  │  MemPalace Memory (Kotlin Room + ONNX — native)        │  │
-│  └────────────────────────────────────────────────────────┘  │
-│                                                              │
-│  ┌────────────────────────────────────────────────────────┐  │
-│  │  Termux Terminal (Java — GPU: Turnip/VirGL/Mesa)       │  │
-│  └────────────────────────────────────────────────────────┘  │
+│  │  │ OmniRoute    │ │ Room DB      │ │ DataStore    │  │  │
+│  │  │ (SSE Stream) │ │ (Conv/Mem)   │ │ (Settings)   │  │  │
+│  │  └──────────────┘ └──────────────┘ └──────────────┘  │  │
+│  └───────────────────────────────────────────────────────┘  │
+│                                       │                      │
+│  ┌───────────────────────────────────────────────────────┐  │
+│  │              Termux Bootstrap (glibc)                  │  │
+│  │  OpenClaw | Claw Code | OpenCode | Codex              │  │
+│  └───────────────────────────────────────────────────────┘  │
+│                                       │                      │
+│  ┌───────────────────────────────────────────────────────┐  │
+│  │              GPU Acceleration                          │  │
+│  │  Turnip (Adreno) | VirGL (Mali) | LLVMpipe            │  │
+│  └───────────────────────────────────────────────────────┘  │
 └─────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## 🔧 Problems & Solutions
+## 📊 Phase Tracker
 
-### P1: Bootstrap Compatibility
-**Problem**: Android uses Bionic libc, but Node.js/Python packages need glibc
-**Solution**: Use glibc linker from termux-packages (ld-linux-aarch64.so.1) + glibc-compat.js shim
-**Status**: ✅ Solved by openclaw-android
-
-### P2: Termux Path Hardcoding
-**Problem**: Termux packages have hardcoded `/data/data/com.termux/` paths
-**Solution**: libtermux-exec intercepts execve, rewrites paths. SYMLINKS.txt replaces com.termux → app package.
-**Status**: ✅ Solved by openclaw-android
-
-### P3: GPU Acceleration
-**Problem**: Android apps can't directly access GPU for Linux binaries
-**Solution**: Turnip (Adreno 610+), VirGL (Mali), LLVMpipe (fallback) via Mesa
-**Performance**: GLMARK2 — Turnip: 198, LLVMpipe: 93, VirGL: 75
-**Status**: 🔧 To implement
-
-### P4: Multi-Agent Coordination
-**Problem**: Multiple agents need to coordinate without context window pollution
-**Solution**: clawhip (event router) keeps monitoring outside agent context. OmO provides Architect/Executor/Reviewer pattern.
-**Status**: 🔧 To integrate
-
-### P5: Memory Persistence
-**Problem**: Agent conversations need long-term memory
-**Solution**: MemPalace pattern — wing→room→drawer hierarchy with semantic search. Rewrite as Kotlin Room + ONNX.
-**Status**: 🔧 To implement
-
-### P6: Provider Routing
-**Problem**: Single provider failures break the experience
-**Solution**: OmniRoute pattern — 340+ providers with auto-fallback, quota tracking, token compression
-**Status**: 🔧 To implement
-
-### P7: Safe Tool Execution
-**Problem**: Agent tools can be destructive
-**Solution**: Codex guardian pattern — approval flow for dangerous operations. Claw Code PermissionMode for read-only defaults.
-**Status**: 🔧 To implement
-
-### P8: RAG for Code + Life
-**Problem**: Agents need context beyond current conversation
-**Solution**: Claw Code claw-rag-service — SQLite + embeddings, HTTP API. Work RAG + Personal RAG separation.
-**Status**: 🔧 To integrate
-
-### P9: Proactive AI
-**Problem**: Agents are reactive, not proactive
-**Solution**: OmX-style scheduled loops — check inbox, extract tasks, draft responses, post digest
-**Status**: 🔧 Future
-
-### P10: Voice Interface
-**Problem**: Terminal-only interaction limits mobile use
-**Solution**: STT input + TTS output via Android APIs. Chat bridge for Discord/Telegram.
-**Status**: 🔧 Future
-
----
-
-## 🗺️ Roadmap
-
-### Phase 1 — Foundation (CURRENT)
-- [ ] Fork openclaw-android → ClawDroid
-- [ ] Update bootstrap to termux-packages 2026.08.16-r1
-- [ ] Set up project structure (Gradle, modules)
-- [ ] Install OpenClaw agent in bootstrap
-- [ ] Install Claw Code (3 components) in bootstrap
-- [ ] Install OpenCode tools in bootstrap
-- [ ] Ship OpenAI Codex binary
-- [ ] Build AgentBridge (Kotlin ↔ WebView ↔ Node.js)
-- [ ] Build ChatScreen (React) with streaming
-- [ ] Build MemoryStore (Kotlin Room + ONNX)
-- [ ] GitHub Actions CI
-- [ ] Verify: all agents work in terminal
-
-### Phase 2 — GPU + Multi-Agent
-- [ ] GPU detection (Adreno/Mali/other)
-- [ ] GPU package install (Turnip/VirGL/Mesa)
-- [ ] GPU server lifecycle
-- [ ] OmX workflow integration
-- [ ] clawhip event router
-- [ ] OmO Architect/Executor/Reviewer
-- [ ] Claw Code RAG service integration
-
-### Phase 3 — Features + Polish
-- [ ] ProviderRouter (OmniRoute pattern)
-- [ ] Tool approval flow
-- [ ] Dark mode, animations
-- [ ] Voice input/output
-- [ ] Chat bridge (Discord/Telegram)
-- [ ] Plugin marketplace
-- [ ] ProGuard, performance
-
-### Phase 4 — Advanced
-- [ ] Proactive AI loops
-- [ ] Multi-modal (images/PDF)
-- [ ] Accessibility integration
-- [ ] WearOS support
-- [ ] Play Store release
-
----
-
-## 📊 Key Metrics
-
-| Metric | Target |
-|--------|--------|
-| APK size | < 30MB (bootstrap downloaded at runtime) |
-| Bootstrap size | 31MB (official Termux) |
-| Agent count | 5 (OpenClaw, Claw Code, OpenCode, Codex, Claw Code components) |
-| Provider count | 340+ (via OmniRoute) |
-| Memory storage | Local SQLite + ONNX embeddings |
-| GPU acceleration | Turnip/VirGL/Mesa |
-| minSdk | 26 (Android 8) |
-| Build system | GitHub Actions |
-
----
-
-## 📚 References
-
-- OpenClaw: https://github.com/openclaw/openclaw
-- Claw Code: https://github.com/instructkr/claw-code
-- Claw Code Website: https://claw-code.codes/
-- OpenCode: https://github.com/anomalyco/opencode
-- OpenAI Codex: https://github.com/openai/codex
-- MemPalace: https://github.com/MemPalace/mempalace
-- OmniRoute: https://github.com/diegosouzapw/OmniRoute
-- OpenClaw Android: https://github.com/AidanPark/openclaw-android
-- Termux: https://github.com/termux
-- Termux Packages: https://github.com/termux/termux-packages
-- Termux API: https://github.com/termux/termux-api
-- Hardware Acceleration: https://github.com/LinuxDroidMaster/Termux-Desktops/blob/main/Documentation/HardwareAcceleration.md
-- OmX: https://github.com/Yeachan-Heo/oh-my-codex
-- OmO: https://github.com/code-yeongyu/oh-my-openagent
-- LazyCodex: https://github.com/code-yeongyu/lazycodex
-
-
----
-
-## 📊 PROJECT TRACKER — Live Roadmap
-
-> **Last updated**: 2026-08-17
-> **Status**: Phase 1 IN PROGRESS — Scaffold + Core
-> **Build**: GitHub Actions (never build locally)
-> **Repo**: https://github.com/rajbhx/ClawDroid
-
-### Phase 1 — Scaffold & Core
+### Phase 0 — Fix Build
 
 | # | Task | Status | Commit | Notes |
 |---|------|--------|--------|-------|
-| 1 | Create GitHub repo | ✅ DONE | — | rajbhx/ClawDroid |
-| 2 | Fork openclaw-android architecture | ✅ DONE | e0f02db | 37 files, 2049 lines |
-| 3 | Copy terminal-emulator sources | ✅ DONE | 334fd68 | 14 Java files from Termux |
-| 4 | Copy terminal-view sources | ✅ DONE | 334fd68 | 8 Java files from Termux |
-| 5 | Add Gradle wrapper | ✅ DONE | 1ac5277 | gradlew + jar |
-| 6 | Fix compileSdk (34→35) | ✅ DONE | b50547c | Dependencies require 35 |
-| 7 | Fix terminal-emulator annotation | ✅ DONE | e3173db | androidx.annotation dep |
-| 8 | Fix terminal-view resources | ✅ DONE | 1f471d9 | strings + drawables |
-| 9 | Fix Kotlin compilation errors | ✅ DONE | 0f10eb0 | JsBridge + MainActivity |
-| 10 | GitHub Actions build green | 🔄 IN PROGRESS | — | Waiting for CI |
-| 11 | Create core-model module | ⏳ PENDING | — | Domain entities |
-| 12 | Create core-common module | ⏳ PENDING | — | Utilities |
-| 13 | Create core-network module | ⏳ PENDING | — | OmniRoute client |
-| 14 | Create app module with Hilt | ⏳ PENDING | — | DI setup |
-| 15 | Create navigation system | ⏳ PENDING | — | Compose Nav |
+| 0.1 | Fix JsBridge switchSession syntax | ✅ DONE | cafff06 | Stray `{` before `=` |
+| 0.2 | Add switchSessionById(String) | ✅ DONE | cafff06 | Handle-based session lookup |
+| 0.3 | CI build green | ❌ FAILED | 5354d2f | Compose Compiler plugin fix |
+
+### Phase 1 — Core Architecture
+
+| # | Task | Status | Commit | Notes |
+|---|------|--------|--------|-------|
+| 1.1 | Multi-module Gradle restructure | ✅ DONE | 2c0f15c | app + terminal-emulator + terminal-view |
+| 1.2 | Version catalog (Compose, Hilt, DataStore) | ✅ DONE | 2c0f15c | libs.versions.toml |
+| 1.3 | Compose BOM + Material3 | ✅ DONE | 2c0f15c | compose-bom 2024.12.01 |
+| 1.4 | Hilt DI (Database, Network, App modules) | ✅ DONE | 2c0f15c | @HiltAndroidApp + @AndroidEntryPoint |
+| 1.5 | Navigation (5 screens, bottom bar) | ✅ DONE | 2c0f15c | Compose Nav + NavItem |
+| 1.6 | Theme system (Material You + Tokyo Night) | ✅ DONE | 2c0f15c | Dual theme with toggle |
+| 1.7 | ProGuard rules | ✅ DONE | 2c0f15c | OkHttp, Room, ONNX, Gson, Terminal |
+| 1.8 | Compose Compiler plugin fix | ✅ DONE | 5354d2f | Required for Kotlin 2.0+ |
 
 ### Phase 2 — AI Chat (Core Feature)
 
-| # | Task | Status | Notes |
-|---|------|--------|-------|
-| 1 | OmniRoute API client (Retrofit + SSE) | ⏳ PENDING | 340+ providers |
-| 2 | Chat UI (message list, input, model picker) | ⏳ PENDING | Compose |
-| 3 | Provider management screen | ⏳ PENDING | API key storage |
-| 4 | Code block rendering | ⏳ PENDING | Syntax highlighting |
-| 5 | Streaming response display | ⏳ PENDING | Real-time SSE |
-| 6 | Multi-model support | ⏳ PENDING | OpenAI, Anthropic, Google |
+| # | Task | Status | Commit | Notes |
+|---|------|--------|--------|-------|
+| 2.1 | OmniRoute streaming client (SSE) | ✅ DONE | 2c0f15c | OkHttp + SSE, 8 providers |
+| 2.2 | Chat UI (message list, input, model picker) | ✅ DONE | 2c0f15c | Compose LazyColumn + bubbles |
+| 2.3 | Provider management screen | ✅ DONE | 2c0f15c | Settings > Providers |
+| 2.4 | Code block rendering | ✅ DONE | 2c0f15c | MarkCompose library |
+| 2.5 | Streaming response display | ✅ DONE | 2c0f15c | Token-by-token with cursor |
+| 2.6 | Multi-model support | ✅ DONE | 2c0f15c | 8 providers, 30+ models |
 
 ### Phase 3 — Terminal (Differentiator)
 
-| # | Task | Status | Notes |
-|---|------|--------|-------|
-| 1 | JNI bridge for PTY | ⏳ PENDING | fork/exec |
-| 2 | Terminal emulator view | ⏳ PENDING | ANSI colors |
-| 3 | Tab management | ⏳ PENDING | Multi-session |
-| 4 | Keyboard shortcuts | ⏳ PENDING | ESC, CTRL, ALT |
-| 5 | Chat integration | ⏳ PENDING | AI → terminal |
+| # | Task | Status | Commit | Notes |
+|---|------|--------|--------|-------|
+| 3.1 | TerminalView in Compose (AndroidView) | ✅ DONE | 2c0f15c | Embedded in TerminalScreen |
+| 3.2 | Terminal session management | ✅ DONE | 2c0f15c | Inline session creation |
+| 3.3 | Chat → Terminal bridge | ⏳ PENDING | — | Send AI commands to terminal |
+| 3.4 | Terminal → Chat context | ⏳ PENDING | — | Long-press to send to AI |
 
 ### Phase 4 — Memory (Power Feature)
 
-| # | Task | Status | Notes |
-|---|------|--------|-------|
-| 1 | Room database schema | ⏳ PENDING | Wings/rooms/drawers |
-| 2 | ONNX Runtime integration | ⏳ PENDING | Local embeddings |
-| 3 | Semantic search | ⏳ PENDING | Vector similarity |
-| 4 | Memory browser UI | ⏳ PENDING | Compose |
-| 5 | MemPalace server sync | ⏳ PENDING | Optional remote |
+| # | Task | Status | Commit | Notes |
+|---|------|--------|--------|-------|
+| 4.1 | Room database schema | ✅ DONE | 2c0f15c | memories, conversations, messages, provider_keys |
+| 4.2 | ONNX Runtime integration | ✅ DONE | 2c0f15c | onnxruntime-android 1.19.0 |
+| 4.3 | Semantic search | ⏳ PENDING | — | Vector similarity (needs embedding model) |
+| 4.4 | Memory browser UI | ✅ DONE | 2c0f15c | Compose with categories + search |
+| 4.5 | MemPalace server sync | ⏳ PENDING | — | Optional remote sync |
 
-### Phase 5 — Editor & Agent (Advanced)
+### Phase 5 — Agent Hub
 
-| # | Task | Status | Notes |
-|---|------|--------|-------|
-| 1 | Code editor component | ⏳ PENDING | Syntax highlighting |
-| 2 | Agent mode | ⏳ PENDING | Tool use + approval |
-| 3 | File browser | ⏳ PENDING | Project files |
-| 4 | Git integration | ⏳ PENDING | Via terminal |
+| # | Task | Status | Commit | Notes |
+|---|------|--------|--------|-------|
+| 5.1 | Agent status dashboard | ✅ DONE | 2c0f15c | 6 agents with install status |
+| 5.2 | Agent cards (stars, language, description) | ✅ DONE | 2c0f15c | Card UI with metadata |
+| 5.3 | One-tap install | ⏳ PENDING | — | Terminal-based installer |
+| 5.4 | Agent runner | ⏳ PENDING | — | Prompt input + streaming output |
 
-### Phase 6 — Polish & Ship
+### Phase 6 — GPU Acceleration
 
-| # | Task | Status | Notes |
-|---|------|--------|-------|
-| 1 | ProGuard rules | ⏳ PENDING | OkHttp, Room, ONNX |
-| 2 | Adaptive icons | ⏳ PENDING | |
-| 3 | Splash screen | ⏳ PENDING | |
-| 4 | E2E tests | ⏳ PENDING | |
-| 5 | Release signing | ⏳ PENDING | |
-| 6 | First tagged release | ⏳ PENDING | v1.0.0 |
+| # | Task | Status | Commit | Notes |
+|---|------|--------|--------|-------|
+| 6.1 | GPU detection script | ✅ DONE | earlier | detect-gpu.sh |
+| 6.2 | GPU install script | ✅ DONE | earlier | install-gpu-packages.sh |
+| 6.3 | GPU status in settings | ⏳ PENDING | — | UI indicator |
+| 6.4 | Performance mode toggle | ⏳ PENDING | — | GPU on/off |
+
+### Phase 7 — Polish & Ship
+
+| # | Task | Status | Commit | Notes |
+|---|------|--------|--------|-------|
+| 7.1 | ProGuard rules | ✅ DONE | 2c0f15c | Full coverage |
+| 7.2 | Adaptive icons | ⏳ PENDING | — | Vector drawable |
+| 7.3 | Splash screen | ⏳ PENDING | — | Material3 SplashScreen |
+| 7.4 | E2E tests | ⏳ PENDING | — | Compose + integration |
+| 7.5 | Release signing | ⏳ PENDING | — | GitHub Secrets |
+| 7.6 | First tagged release | ⏳ PENDING | — | v1.0.0 |
 
 ---
 
@@ -303,49 +171,127 @@ All running inside a Termux bootstrap with GPU acceleration.
 | 32043830005 | 1ac5277 | ❌ FAILED | 2m34s | Missing annotation dep |
 | 32044006279 | b50547c | ❌ FAILED | 1m33s | Missing string/drawable resources |
 | 32044304756 | 1f471d9 | ❌ FAILED | 2m14s | Kotlin compilation errors |
-| 32044500000 | 0f10eb0 | 🔄 RUNNING | — | Fixed JsBridge + MainActivity |
+| 32044494227 | 0f10eb0 | ❌ FAILED | 1m3s | JsBridge/MainActivity errors |
+| 32044604309 | 76e12ff | ❌ FAILED | 57s | JsBridge syntax error |
+| 32045096429 | cafff06 | ❌ FAILED | 1m9s | Old MainActivity type mismatch |
+| 32045947101 | 2c0f15c | ❌ FAILED | 43s | Compose Compiler plugin |
+| — | 5354d2f | 🔄 RUNNING | — | Compose Compiler plugin fix |
 
 ---
 
-### 📁 File Inventory
+### 📁 File Inventory (Current — 43 Kotlin + 22 Java)
 
-**Kotlin (13 files):**
-- `MainActivity.kt` — Main entry (195 lines)
-- `AgentBridge.kt` — Agent bridge (148 lines)
-- `BootstrapManager.kt` — Bootstrap (205 lines)
-- `JsBridge.kt` — WebView bridge
-- `EnvironmentBuilder.kt` — Env setup
-- `EventBridge.kt` — Event dispatch
-- `TerminalSessionManager.kt` — Multi-session
-- `CommandRunner.kt` — Shell exec
-- `GpuDetector.kt` — GPU detection
-- `UrlResolver.kt` — URL resolution
+**Kotlin (43 files):**
+- `ClawdroidApp.kt` — @HiltAndroidApp Application
+- `MainActivity.kt` — Compose host activity
 - `ClawdroidService.kt` — Foreground service
 - `BootReceiver.kt` — Boot auto-start
-- `AppLogger.kt` — Logging
+- `BootstrapManager.kt` — Termux bootstrap extraction
+- `EnvironmentBuilder.kt` — Environment variable builder
+- `GpuDetector.kt` — GPU detection
+- `CommandRunner.kt` — Shell command execution
+- `UrlResolver.kt` — Remote URL resolution
+- `AppLogger.kt` — Logging utility
+
+**Data Layer (13 files):**
+- `ClawdroidDatabase.kt` — Room database
+- `ConversationDao.kt`, `MessageDao.kt`, `MemoryDao.kt`, `ProviderKeyDao.kt` — DAOs
+- `Conversation.kt`, `Message.kt`, `MemoryEntry.kt`, `ProviderKey.kt` — Entities
+- `OmniRouteClient.kt` — Streaming API client
+- `ProviderConfig.kt` — Provider definitions
+- `ChatRequest.kt`, `ChatResponse.kt` — DTOs
+
+**Repositories (3 files):**
+- `ChatRepository.kt` — Chat + streaming
+- `MemoryRepository.kt` — Memory CRUD
+- `SettingsRepository.kt` — DataStore + provider keys
+
+**DI (3 files):**
+- `DatabaseModule.kt`, `NetworkModule.kt`, `AppModule.kt` — Hilt modules
+
+**UI (11 files):**
+- `NavGraph.kt`, `Screen.kt` — Navigation
+- `ChatScreen.kt`, `TerminalScreen.kt`, `AgentHubScreen.kt`, `MemoryScreen.kt`, `SettingsScreen.kt` — Screens
+- `Theme.kt`, `Color.kt`, `Type.kt` — Theme system
+
+**ViewModels (4 files):**
+- `ChatViewModel.kt`, `MemoryViewModel.kt`, `SettingsViewModel.kt`, `AgentHubViewModel.kt`
 
 **Java (22 files):**
 - terminal-emulator: 14 files (TerminalSession, TerminalEmulator, JNI, etc.)
 - terminal-view: 8 files (TerminalView, TerminalRenderer, etc.)
 
-**Build (8 files):**
-- build.gradle.kts (root + app)
-- libs.versions.toml
-- settings.gradle.kts
-- gradle.properties
-- gradle-wrapper.properties
-- gradlew + gradlew.bat
+**Build (12 files):**
+- `build.gradle.kts` (root + app)
+- `libs.versions.toml`
+- `settings.gradle.kts`
+- `gradle.properties`
+- `gradle-wrapper.properties`
+- `gradlew` + `gradlew.bat`
+- `proguard-rules.pro`
 
 **Scripts (3 files):**
-- detect-gpu.sh
-- install-gpu-packages.sh
-- start-gpu-server.sh
+- `detect-gpu.sh`, `install-gpu-packages.sh`, `start-gpu-server.sh`
 
 **CI/CD (2 files):**
-- build.yml
-- release.yml
+- `build.yml`, `release.yml`
 
 **Docs (2 files):**
-- README.md
-- PLAYBOOK.md
+- `README.md`, `PLAYBOOK.md`
 
+---
+
+## 🔧 Tech Stack
+
+| Component | Technology | Version |
+|-----------|-----------|---------|
+| Language | Kotlin | 2.1.0 |
+| Build | Gradle | 8.11.1 |
+| AGP | Android Gradle Plugin | 8.7.3 |
+| UI | Jetpack Compose + Material3 | BOM 2024.12.01 |
+| DI | Hilt | 2.51.1 |
+| Database | Room | 2.6.1 |
+| Network | OkHttp + SSE | 4.12.0 |
+| ML | ONNX Runtime | 1.19.0 |
+| Settings | DataStore | 1.1.1 |
+| Serialization | Gson + kotlinx.serialization | 2.11.0 / 1.7.3 |
+| Terminal | Termux terminal-emulator + view | Java |
+| Bootstrap | Termux packages | 2026.08.16-r1 |
+| minSdk | Android 8 (API 26) | — |
+| targetSdk | Android 14 (API 34) | — |
+| compileSdk | Android 15 (API 35) | — |
+
+---
+
+## 🚀 Commands
+
+```bash
+# Build (CI only — never build locally)
+git push origin main  # Triggers GitHub Actions
+
+# Check build status
+gh run list --workflow=build.yml --limit=5
+
+# Download APK artifact
+gh run download <RUN_ID> -n clawdroid-debug
+
+# Tag release
+git tag v1.0.0 && git push --tags
+```
+
+---
+
+## 📋 Decisions & Rationale
+
+| Decision | Rationale |
+|----------|-----------|
+| Compose over WebView | Modern, fast, smaller APK, native feel |
+| OmniRoute-first | 340+ providers through one interface |
+| Dual theme (Material You + Tokyo Night) | Flexibility — dynamic color on Android 12+, fixed dark theme |
+| Keep terminal as Java | Proven Termux code, no rewrite needed |
+| Room over SQLite | Type-safe, coroutine-friendly, migration support |
+| DataStore over SharedPreferences | Async, type-safe, handles corruption |
+| Hilt over Koin | Official Google DI, better Compose integration |
+| KSP over KAPT | Faster compilation, Kotlin 2.0 support |
+| OkHttp over Retrofit | SSE streaming needs raw OkHttp |
+| ONNX Runtime | On-device embeddings, no server dependency |
