@@ -4,7 +4,7 @@ import com.clawdroid.android.data.local.dao.MemoryDao
 import com.clawdroid.android.data.local.entity.MemoryEntry
 import com.clawdroid.android.data.ml.EmbeddingService
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.first
+import java.nio.ByteBuffer
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -20,10 +20,11 @@ class MemoryRepository @Inject constructor(
 
     suspend fun insert(memory: MemoryEntry): Long {
         val id = memoryDao.insert(memory)
-        // Try to generate embedding asynchronously
         val embedding = embeddingService.embed(memory.content)
         if (embedding != null) {
-            memoryDao.updateEmbedding(id, floatArrayToBytes(embedding))
+            val buffer = ByteBuffer.allocate(embedding.size * 4)
+            buffer.asFloatBuffer().put(embedding)
+            memoryDao.updateEmbedding(id, buffer.array())
         }
         return id
     }
@@ -38,11 +39,9 @@ class MemoryRepository @Inject constructor(
         return allMemories
             .filter { it.embedding != null }
             .map { memory ->
-                val memoryEmbedding = floatArrayOf()
                 val bytes = memory.embedding!!
-                val buffer = java.nio.ByteBuffer.wrap(bytes)
                 val floats = FloatArray(bytes.size / 4)
-                buffer.asFloatBuffer().get(floats)
+                ByteBuffer.wrap(bytes).asFloatBuffer().get(floats)
                 memory to embeddingService.cosineSimilarity(queryEmbedding, floats)
             }
             .sortedByDescending { it.second }
