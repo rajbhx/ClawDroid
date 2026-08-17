@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="terminalBackground">#FF1A1B26</color>
+    <color name="tabBarBackground">#FF24283B</color>
+    <color name="tabBorder">#FF414868</color>
+    <color name="extraKeysBackground">#FF1A1B26</color>
+    <color name="extraKeyText">#FF7AA2F7</color>
+    <color name="extraKeyBg">#FF24283B</color>
+    <color name="extraKeyBgActive">#FF7AA2F7</color>
+    <color name="primary">#FF7AA2F7</color>
+    <color name="primaryDark">#FF1A1B26</color>
+    <color name="accent">#FF9ECE6A</color>
+</resources>

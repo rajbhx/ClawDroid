@@ -1,0 +1,40 @@
+# Build
+/build/
+/android/.gradle/
+/android/app/build/
+/android/build/
+/android/terminal-emulator/build/
+/android/terminal-view/build/
+/android/local.properties
+*.apk
+*.aab
+*.jks
+*.keystore
+
+# IDE
+.idea/
+*.iml
+.vscode/
+*.swp
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+*.log
+
+# Node
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Gradle
+.gradle/
+gradle/wrapper/gradle-wrapper.jar

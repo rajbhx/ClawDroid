@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="AppTheme" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+        <item name="colorPrimary">@color/primary</item>
+        <item name="colorPrimaryDark">@color/primaryDark</item>
+        <item name="colorAccent">@color/accent</item>
+        <item name="android:windowBackground">@color/terminalBackground</item>
+        <item name="android:statusBarColor">@color/primaryDark</item>
+    </style>
+    <style name="ExtraKeyButton" parent="Widget.MaterialComponents.Button.TextButton">
+        <item name="android:textColor">@color/extraKeyText</item>
+        <item name="android:textSize">11sp</item>
+        <item name="android:minWidth">0dp</item>
+        <item name="android:minHeight">0dp</item>
+        <item name="android:paddingStart">2dp</item>
+        <item name="android:paddingEnd">2dp</item>
+        <item name="android:layout_marginStart">1dp</item>
+        <item name="android:layout_marginEnd">1dp</item>
+        <item name="android:background">@drawable/extra_key_bg</item>
+    </style>
+</resources>
