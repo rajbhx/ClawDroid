@@ -17,11 +17,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleEventObserver
 import com.clawdroid.android.EnvironmentBuilder
 import com.termux.terminal.TerminalSession
 import com.termux.terminal.TerminalSessionClient
@@ -31,22 +28,9 @@ import com.termux.view.TerminalViewClient
 @Composable
 fun TerminalScreen() {
     val context = LocalContext.current
-    val lifecycleOwner = LocalLifecycleOwner.current
     val env = remember { EnvironmentBuilder.build(context) }
     var sessionRef by remember { mutableStateOf<TerminalSession?>(null) }
     var inputText by remember { mutableStateOf("") }
-
-    DisposableEffect(lifecycleOwner) {
-        val observer = LifecycleEventObserver { _, event ->
-            if (event == Lifecycle.Event.ON_RESUME) {
-                sessionRef?.let { /* resume if needed */ }
-            }
-        }
-        lifecycleOwner.lifecycle.addObserver(observer)
-        onDispose {
-            lifecycleOwner.lifecycle.removeObserver(observer)
-        }
-    }
 
     Column(modifier = Modifier.fillMaxSize()) {
         val tv = remember {
@@ -136,12 +120,18 @@ fun TerminalScreen() {
             placeholder = { Text("Type command...") },
             singleLine = true,
             shape = RoundedCornerShape(12.dp),
+            onKeyboardAction = {
+                if (inputText.isNotBlank()) {
+                    sessionRef?.write(inputText + "\n")
+                    inputText = ""
+                }
+            },
         )
     }
 
     DisposableEffect(Unit) {
         onDispose {
-            sessionRef?.finishIfRunning()
+            try { sessionRef?.finishIfRunning() } catch (_: Exception) {}
             sessionRef = null
         }
     }

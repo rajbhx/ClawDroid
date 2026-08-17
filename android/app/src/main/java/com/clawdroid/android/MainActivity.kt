@@ -9,9 +9,13 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.activity.viewModels
 import com.clawdroid.android.ui.navigation.ClawdroidNavGraph
+import com.clawdroid.android.ui.screens.BootstrapScreen
 import com.clawdroid.android.ui.theme.ClawdroidTheme
 import com.clawdroid.android.ui.theme.ThemeMode
 import com.clawdroid.android.viewmodel.SettingsViewModel
@@ -19,13 +23,20 @@ import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
+
     private val settingsViewModel: SettingsViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+
+        val bootstrapManager = BootstrapManager(this)
+        val isInstalled = bootstrapManager.isInstalled()
+
         setContent {
             val themeMode by settingsViewModel.themeMode.collectAsState(initial = 1)
+            var bootstrapped by remember { mutableStateOf(isInstalled) }
+
             ClawdroidTheme(
                 themeMode = if (themeMode == 0) ThemeMode.MATERIAL_YOU else ThemeMode.TOKYO_NIGHT,
             ) {
@@ -33,7 +44,14 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background,
                 ) {
-                    ClawdroidNavGraph()
+                    if (bootstrapped) {
+                        ClawdroidNavGraph()
+                    } else {
+                        BootstrapScreen(
+                            bootstrapManager = bootstrapManager,
+                            onBootstrapComplete = { bootstrapped = true },
+                        )
+                    }
                 }
             }
         }
