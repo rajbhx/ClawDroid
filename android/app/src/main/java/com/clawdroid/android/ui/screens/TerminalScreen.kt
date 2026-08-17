@@ -6,7 +6,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.MaterialTheme
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -17,6 +18,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import com.clawdroid.android.EnvironmentBuilder
@@ -31,6 +34,7 @@ fun TerminalScreen() {
     val env = remember { EnvironmentBuilder.build(context) }
     var sessionRef by remember { mutableStateOf<TerminalSession?>(null) }
     var inputText by remember { mutableStateOf("") }
+    val keyboardController = LocalSoftwareKeyboardController.current
 
     Column(modifier = Modifier.fillMaxSize()) {
         val tv = remember {
@@ -120,12 +124,14 @@ fun TerminalScreen() {
             placeholder = { Text("Type command...") },
             singleLine = true,
             shape = RoundedCornerShape(12.dp),
-            onKeyboardAction = {
+            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Send),
+            keyboardActions = KeyboardActions(onSend = {
                 if (inputText.isNotBlank()) {
                     sessionRef?.write(inputText + "\n")
                     inputText = ""
+                    keyboardController?.hide()
                 }
-            },
+            }),
         )
     }
 
