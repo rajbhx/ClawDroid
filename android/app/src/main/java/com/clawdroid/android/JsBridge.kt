@@ -2,6 +2,9 @@ package com.clawdroid.android
 
 import android.webkit.JavascriptInterface
 import com.google.gson.Gson
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 class JsBridge(
     private val activity: MainActivity,
@@ -10,6 +13,7 @@ class JsBridge(
     private val eventBridge: EventBridge,
 ) {
     private val gson = Gson()
+    private val scope = CoroutineScope(Dispatchers.IO)
 
     @JavascriptInterface
     fun showTerminal() {
@@ -44,7 +48,7 @@ class JsBridge(
 
     @JavascriptInterface
     fun writeToTerminal(id: String, data: String) {
-        val session = if (id.isBlank()) sessionManager.activeSession else sessionManager.getSessionById(id) ?: sessionManager.activeSession
+        val session = if (id.isBlank()) sessionManager.activeSession else sessionManager.activeSession
         session?.write(data)
     }
 
@@ -53,10 +57,7 @@ class JsBridge(
 
     @JavascriptInterface
     fun startBootstrap() {
-        activity.runOnUiThread {
-            android.widget.Toast.makeText(activity, "Starting bootstrap...", android.widget.Toast.LENGTH_SHORT).show()
-        }
-        kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.IO).launch {
+        scope.launch {
             try {
                 bootstrapManager.startSetup { progress, message ->
                     eventBridge.emit("bootstrap_progress", mapOf("progress" to progress, "message" to message))

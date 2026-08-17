@@ -27,7 +27,6 @@ class MainActivity : AppCompatActivity() {
     lateinit var bootstrapManager: BootstrapManager
     lateinit var eventBridge: EventBridge
     private lateinit var agentBridge: AgentBridge
-    private lateinit var gpuDetector: GpuDetector
 
     private val terminalSessionClient = ClawdroidSessionClient()
     private val terminalViewClient = ClawdroidViewClient()
@@ -41,7 +40,6 @@ class MainActivity : AppCompatActivity() {
         eventBridge = EventBridge(binding.webView)
         sessionManager = TerminalSessionManager(this, terminalSessionClient, eventBridge)
         agentBridge = AgentBridge(this, sessionManager, bootstrapManager, eventBridge)
-        gpuDetector = GpuDetector
 
         setupTerminalView()
         setupWebView()
@@ -50,7 +48,7 @@ class MainActivity : AppCompatActivity() {
         startService(Intent(this, ClawdroidService::class.java))
 
         val isInstalled = bootstrapManager.isInstalled()
-        AppLogger.i(TAG, "Bootstrap installed: $isInstalled, GPU: ${gpuDetector.getAccelerationMethod()}")
+        AppLogger.i(TAG, "Bootstrap installed: $isInstalled, GPU: ${GpuDetector.getAccelerationMethod()}")
 
         if (isInstalled) {
             showTerminal()
@@ -70,8 +68,8 @@ class MainActivity : AppCompatActivity() {
             allowContentAccess = true
             useWideViewPort = true
             loadWithOverviewMode = true
-            setWebContentsDebuggingEnabled(true)
             cacheMode = WebSettings.LOAD_DEFAULT
+            setWebContentsDebuggingEnabled(true)
         }
         binding.webView.webViewClient = WebViewClient()
         binding.webView.webChromeClient = WebChromeClient()
@@ -86,8 +84,8 @@ class MainActivity : AppCompatActivity() {
 
     private fun setupExtraKeys() {
         binding.btnEsc.setOnClickListener { activeSession?.write("\u001b") }
-        binding.btnCtrl.setOnClickListener { /* toggle ctrl mode */ }
-        binding.btnAlt.setOnClickListener { /* toggle alt mode */ }
+        binding.btnCtrl.setOnClickListener { }
+        binding.btnAlt.setOnClickListener { }
         binding.btnTab.setOnClickListener { activeSession?.write("\t") }
         binding.btnHome.setOnClickListener { activeSession?.write("\u001b[H") }
         binding.btnEnd.setOnClickListener { activeSession?.write("\u001b[F") }
@@ -178,6 +176,7 @@ class MainActivity : AppCompatActivity() {
         override fun onColorsChanged(session: TerminalSession) {}
         override fun onTerminalCursorStateChange(state: Boolean) {}
         override fun setTerminalShellPid(session: TerminalSession, pid: Int) {}
+        override fun onSessionFinished(session: TerminalSession) {}
         override fun getTerminalCursorStyle(): Int = 0
         override fun logError(tag: String, message: String) { AppLogger.e(tag, message) }
         override fun logWarn(tag: String, message: String) { AppLogger.w(tag, message) }
