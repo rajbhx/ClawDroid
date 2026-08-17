@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
@@ -40,10 +39,9 @@ fun BootstrapScreen(
     bootstrapManager: BootstrapManager,
     onBootstrapComplete: () -> Unit,
 ) {
-    var progress by remember { mutableFloatStateOf(0f) }
-    var statusText by remember { mutableStateOf("Preparing...") }
+    var progress by remember { mutableFloatStateOf(0.05f) }
+    var statusText by remember { mutableStateOf("Preparing bootstrap...") }
     var error by remember { mutableStateOf<String?>(null) }
-    var isComplete by remember { mutableStateOf(false) }
 
     val animatedProgress by animateFloatAsState(
         targetValue = progress,
@@ -55,16 +53,16 @@ fun BootstrapScreen(
         withContext(Dispatchers.IO) {
             try {
                 bootstrapManager.startSetup { p, message ->
-                    progress = p
+                    progress = p.coerceIn(0f, 1f)
                     statusText = message
                 }
-                isComplete = true
-                delay(500)
+                delay(300)
                 withContext(Dispatchers.Main) {
                     onBootstrapComplete()
                 }
             } catch (e: Exception) {
                 error = e.message ?: "Bootstrap failed"
+                progress = 0f
             }
         }
     }
@@ -78,7 +76,7 @@ fun BootstrapScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center,
         ) {
-            Text("🦞", fontSize = 72.sp)
+            Text("\uD83E\uDD9E", fontSize = 72.sp)
             Spacer(Modifier.height(24.dp))
             Text(
                 "ClawDroid",
@@ -94,7 +92,6 @@ fun BootstrapScreen(
             )
             Spacer(Modifier.height(48.dp))
 
-            // Progress bar
             LinearProgressIndicator(
                 progress = { animatedProgress },
                 modifier = Modifier.fillMaxWidth().height(8.dp).clip(RoundedCornerShape(4.dp)),
@@ -103,7 +100,6 @@ fun BootstrapScreen(
             )
             Spacer(Modifier.height(16.dp))
 
-            // Status text
             Text(
                 statusText,
                 style = MaterialTheme.typography.bodyMedium,
