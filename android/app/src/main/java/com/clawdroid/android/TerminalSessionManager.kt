@@ -54,6 +54,11 @@ class TerminalSessionManager(
         activity.runOnUiThread { onSessionsChanged?.invoke() }
     }
 
+    fun switchSessionById(handleId: String) {
+        val index = sessions.indexOfFirst { it.mHandle == handleId }
+        if (index >= 0) switchSession(index)
+    }
+
     fun closeSession(handleId: String) {
         val index = sessions.indexOfFirst { it.mHandle == handleId }
         if (index < 0) return

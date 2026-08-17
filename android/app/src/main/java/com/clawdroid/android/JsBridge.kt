@@ -38,7 +38,7 @@ class JsBridge(
     }
 
     @JavascriptInterface
-    fun switchSession(id: String) { = activity.runOnUiThread { sessionManager.switchSession(id) }
+    fun switchSession(id: String) = activity.runOnUiThread { sessionManager.switchSessionById(id) }
 
     @JavascriptInterface
     fun closeSession(id: String) { sessionManager.closeSession(id) }
@@ -48,7 +48,15 @@ class JsBridge(
 
     @JavascriptInterface
     fun writeToTerminal(id: String, data: String) {
-        val session = if (id.isBlank()) sessionManager.activeSession else sessionManager.activeSession
+        val session = if (id.isBlank()) {
+            sessionManager.activeSession
+        } else {
+            sessionManager.getSessionsInfo()
+                .indexOfFirst { it["id"] == id }
+                .takeIf { it >= 0 }
+                ?.let { sessionManager.activeSession }
+                ?: sessionManager.activeSession
+        }
         session?.write(data)
     }
 
