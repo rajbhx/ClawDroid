@@ -34,7 +34,7 @@ jobs:
           curl -sI "https://github.com/termux/termux-packages/releases/download/bootstrap-${EXPECTED}+apt.android-7/bootstrap-aarch64.zip" | head -1
 
       - name: Build debug APK
-        run: cd android && ./gradlew assembleDebug
+        run: cd android && ./gradlew assembleDebug --stacktrace
 
       - name: Run unit tests
         run: cd android && ./gradlew testDebugUnitTest
