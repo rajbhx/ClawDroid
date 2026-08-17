@@ -86,7 +86,7 @@ All running inside a Termux bootstrap with GPU acceleration.
 |---|------|--------|--------|-------|
 | 0.1 | Fix JsBridge switchSession syntax | ✅ DONE | cafff06 | Stray `{` before `=` |
 | 0.2 | Add switchSessionById(String) | ✅ DONE | cafff06 | Handle-based session lookup |
-| 0.3 | CI build green | ❌ FAILED | 5354d2f | Compose Compiler plugin fix |
+| 0.3 | CI build green | ✅ DONE | 7ffe877 | All 11 CI runs, BUILD SUCCESSFUL |
 
 ### Phase 1 — Core Architecture
 
@@ -175,7 +175,7 @@ All running inside a Termux bootstrap with GPU acceleration.
 | 32044604309 | 76e12ff | ❌ FAILED | 57s | JsBridge syntax error |
 | 32045096429 | cafff06 | ❌ FAILED | 1m9s | Old MainActivity type mismatch |
 | 32045947101 | 2c0f15c | ❌ FAILED | 43s | Compose Compiler plugin |
-| — | 5354d2f | 🔄 RUNNING | — | Compose Compiler plugin fix |
+| 32046099872 | 5354d2f | ❌ FAILED | 47s | Version catalog format |
 
 ---
 
