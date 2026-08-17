@@ -61,14 +61,10 @@ fun SettingsScreen(viewModel: SettingsViewModel = hiltViewModel()) {
         topBar = { TopAppBar(title = { Text("Settings", fontWeight = FontWeight.Bold) }) },
     ) { padding ->
         LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-                .padding(horizontal = 16.dp),
+            modifier = Modifier.fillMaxSize().padding(padding).padding(horizontal = 16.dp),
             verticalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(8.dp),
             contentPadding = androidx.compose.foundation.layout.PaddingValues(vertical = 16.dp),
         ) {
-            // Theme
             item {
                 SettingsSection("Appearance") {
                     SettingsItem(
@@ -77,25 +73,17 @@ fun SettingsScreen(viewModel: SettingsViewModel = hiltViewModel()) {
                         subtitle = if (themeMode == 0) "Material You" else "Tokyo Night",
                         onClick = { showThemeDialog = true },
                     )
-                    SettingsItem(
-                        icon = Icons.Default.TextFields,
-                        title = "Font Size",
-                        subtitle = "${fontSize}sp",
-                        onClick = {},
-                    )
                 }
             }
-
-            // GPU
             item {
                 SettingsSection("Hardware Acceleration") {
                     SettingsItem(
                         icon = Icons.Default.PhoneAndroid,
-                        title = "GPU Status",
+                        title = "GPU",
                         subtitle = gpuInfo.method,
                         trailing = {
-                            androidx.compose.material3.Surface(
-                                shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp),
+                            Surface(
+                                shape = RoundedCornerShape(12.dp),
                                 color = if (gpuInfo.isAvailable) MaterialTheme.colorScheme.tertiaryContainer
                                         else MaterialTheme.colorScheme.errorContainer,
                             ) {
@@ -108,22 +96,8 @@ fun SettingsScreen(viewModel: SettingsViewModel = hiltViewModel()) {
                         },
                         onClick = {},
                     )
-                    SettingsItem(
-                        icon = Icons.Default.Speed,
-                        title = "GPU Acceleration",
-                        subtitle = if (gpuInfo.isAvailable) "Turnip/VirGL enabled" else "LLVMpipe fallback",
-                        trailing = {
-                            Switch(
-                                checked = gpuInfo.isAvailable,
-                                onCheckedChange = { /* TODO: toggle GPU mode */ },
-                            )
-                        },
-                        onClick = {},
-                    )
                 }
             }
-
-            // Providers
             item {
                 SettingsSection("Providers") {
                     providerKeys.forEach { key ->
@@ -141,7 +115,7 @@ fun SettingsScreen(viewModel: SettingsViewModel = hiltViewModel()) {
                     }
                     if (providerKeys.isEmpty()) {
                         Text(
-                            "No providers configured. Add an API key in Chat to get started.",
+                            "Free models available: Groq, Gemini, Ollama (local)",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.outline,
                             modifier = Modifier.padding(12.dp),
@@ -149,28 +123,19 @@ fun SettingsScreen(viewModel: SettingsViewModel = hiltViewModel()) {
                     }
                 }
             }
-
-            // System prompt
             item {
                 SettingsSection("AI") {
                     SettingsItem(
                         icon = Icons.Default.Code,
                         title = "System Prompt",
-                        subtitle = systemPrompt.take(60) + if (systemPrompt.length > 60) "..." else "",
+                        subtitle = systemPrompt.take(50) + if (systemPrompt.length > 50) "..." else "",
                         onClick = { showPromptDialog = true },
                     )
                 }
             }
-
-            // About
             item {
                 SettingsSection("About") {
-                    SettingsItem(
-                        icon = Icons.Default.Code,
-                        title = "ClawDroid",
-                        subtitle = "v1.0.0 — Android AI Agent Platform",
-                        onClick = {},
-                    )
+                    SettingsItem(icon = Icons.Default.Code, title = "ClawDroid", subtitle = "v1.0.0 — Android AI Agent Platform", onClick = {})
                 }
             }
         }
@@ -182,11 +147,17 @@ fun SettingsScreen(viewModel: SettingsViewModel = hiltViewModel()) {
             title = { Text("Select Theme") },
             text = {
                 Column {
-                    ThemeOption("Material You", "Dynamic color from wallpaper (Android 12+)", 0, themeMode) { viewModel.setThemeMode(0) }
-                    ThemeOption("Tokyo Night", "Dark theme with blue accents", 1, themeMode) { viewModel.setThemeMode(1) }
+                    ThemeOption("Material You", "Dynamic color (Android 12+)", 0, themeMode) {
+                        viewModel.setThemeMode(0)
+                        showThemeDialog = false
+                    }
+                    ThemeOption("Tokyo Night", "Dark theme with blue accents", 1, themeMode) {
+                        viewModel.setThemeMode(1)
+                        showThemeDialog = false
+                    }
                 }
             },
-            confirmButton = { TextButton(onClick = { showThemeDialog = false }) { Text("Done") } },
+            confirmButton = {},
         )
     }
 
@@ -203,10 +174,7 @@ fun SettingsScreen(viewModel: SettingsViewModel = hiltViewModel()) {
                 )
             },
             confirmButton = {
-                TextButton(onClick = {
-                    viewModel.setSystemPrompt(promptText)
-                    showPromptDialog = false
-                }) { Text("Save") }
+                TextButton(onClick = { viewModel.setSystemPrompt(promptText); showPromptDialog = false }) { Text("Save") }
             },
             dismissButton = { TextButton(onClick = { showPromptDialog = false }) { Text("Cancel") } },
         )
@@ -216,37 +184,20 @@ fun SettingsScreen(viewModel: SettingsViewModel = hiltViewModel()) {
 @Composable
 fun SettingsSection(title: String, content: @Composable () -> Unit) {
     Column {
-        Text(
-            title,
-            style = MaterialTheme.typography.titleSmall,
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.padding(vertical = 8.dp),
-        )
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)),
-        ) {
+        Text(title, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(vertical = 8.dp))
+        Card(modifier = Modifier.fillMaxWidth(),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))) {
             Column { content() }
         }
     }
 }
 
 @Composable
-fun SettingsItem(
-    icon: ImageVector,
-    title: String,
-    subtitle: String,
-    trailing: @Composable (() -> Unit)? = null,
-    onClick: () -> Unit,
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick)
-            .padding(16.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
+fun SettingsItem(icon: ImageVector, title: String, subtitle: String,
+    trailing: @Composable (() -> Unit)? = null, onClick: () -> Unit) {
+    Row(modifier = Modifier.fillMaxWidth().clickable(onClick = onClick).padding(16.dp),
+        verticalAlignment = Alignment.CenterVertically) {
         Icon(icon, null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
         Spacer(Modifier.width(12.dp))
         Column(modifier = Modifier.weight(1f)) {
@@ -259,19 +210,12 @@ fun SettingsItem(
 
 @Composable
 fun ThemeOption(title: String, subtitle: String, value: Int, current: Int, onClick: () -> Unit) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick)
-            .padding(vertical = 8.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
+    Row(modifier = Modifier.fillMaxWidth().clickable(onClick = onClick).padding(vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically) {
         Column(modifier = Modifier.weight(1f)) {
             Text(title, fontWeight = FontWeight.Medium)
             Text(subtitle, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.outline)
         }
-        if (current == value) {
-            Icon(Icons.Default.Check, "Selected", tint = MaterialTheme.colorScheme.primary)
-        }
+        if (current == value) Icon(Icons.Default.Check, "Selected", tint = MaterialTheme.colorScheme.primary)
     }
 }

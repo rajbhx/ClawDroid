@@ -8,6 +8,7 @@ import com.clawdroid.android.data.TerminalChatBridge
 import com.clawdroid.android.EnvironmentBuilder
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -15,13 +16,8 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 data class AgentInfo(
-    val id: String,
-    val name: String,
-    val description: String,
-    val stars: String,
-    val language: String,
-    val isInstalled: Boolean = false,
-    val command: String,
+    val id: String, val name: String, val description: String, val stars: String,
+    val language: String, val isInstalled: Boolean = false, val command: String,
     val installSteps: List<String> = emptyList(),
 )
 
@@ -30,6 +26,7 @@ data class AgentHubUiState(
     val selectedAgent: AgentInfo? = null,
     val isInstalling: Boolean = false,
     val installProgress: String = "",
+    val installProgressValue: Float = 0f,
     val isRunning: Boolean = false,
     val runOutput: String = "",
 )
@@ -48,9 +45,7 @@ class AgentHubViewModel @Inject constructor(
         refreshAgents()
         viewModelScope.launch {
             terminalChatBridge.terminalOutput.collect { output ->
-                _uiState.value = _uiState.value.copy(
-                    runOutput = _uiState.value.runOutput + output,
-                )
+                _uiState.value = _uiState.value.copy(runOutput = _uiState.value.runOutput + output)
             }
         }
     }
@@ -61,36 +56,42 @@ class AgentHubViewModel @Inject constructor(
         _uiState.value = AgentHubUiState(
             agents = listOf(
                 AgentInfo("openclaw", "OpenClaw", "Personal AI assistant", "★386K", "TypeScript",
-                    checkInstalled(prefix, "openclaw"), "openclaw",
-                    agentInstaller.getInstallSteps("openclaw").map { it.description }),
-                AgentInfo("claw-code", "Claw Code", "Multi-agent coding harness with RAG", "★48K", "Python+Rust",
-                    checkInstalled(prefix, "claw"), "claw",
-                    agentInstaller.getInstallSteps("claw-code").map { it.description }),
+                    checkInstalled(prefix, "openclaw"), "openclaw", agentInstaller.getInstallSteps("openclaw").map { it.description }),
+                AgentInfo("claw-code", "Claw Code", "Multi-agent coding harness", "★48K", "Python+Rust",
+                    checkInstalled(prefix, "claw"), "claw", agentInstaller.getInstallSteps("claw-code").map { it.description }),
                 AgentInfo("opencode", "OpenCode", "Open source coding agent", "★198K", "TypeScript",
-                    checkInstalled(prefix, "opencode"), "opencode",
-                    agentInstaller.getInstallSteps("opencode").map { it.description }),
+                    checkInstalled(prefix, "opencode"), "opencode", agentInstaller.getInstallSteps("opencode").map { it.description }),
                 AgentInfo("codex", "Codex CLI", "OpenAI terminal coding agent", "—", "Rust",
-                    checkInstalled(prefix, "codex"), "codex",
-                    agentInstaller.getInstallSteps("codex").map { it.description }),
+                    checkInstalled(prefix, "codex"), "codex", agentInstaller.getInstallSteps("codex").map { it.description }),
                 AgentInfo("mempalace", "MemPalace", "AI memory system", "★58K", "Python",
-                    false, "mempalace",
-                    agentInstaller.getInstallSteps("mempalace").map { it.description }),
-                AgentInfo("omniroute", "OmniRoute", "340+ provider AI gateway", "★49K", "TypeScript",
-                    checkInstalled(prefix, "omniroute"), "omniroute",
-                    agentInstaller.getInstallSteps("omniroute").map { it.description }),
+                    false, "mempalace", agentInstaller.getInstallSteps("mempalace").map { it.description }),
+                AgentInfo("omniroute", "OmniRoute", "340+ provider gateway", "★49K", "TypeScript",
+                    checkInstalled(prefix, "omniroute"), "omniroute", agentInstaller.getInstallSteps("omniroute").map { it.description }),
             ),
         )
     }
 
-    fun selectAgent(agent: AgentInfo) {
-        _uiState.value = _uiState.value.copy(selectedAgent = agent, runOutput = "")
-    }
+    fun selectAgent(agent: AgentInfo) { _uiState.value = _uiState.value.copy(selectedAgent = agent, runOutput = "") }
 
     fun installAgent(agent: AgentInfo) {
-        _uiState.value = _uiState.value.copy(isInstalling = true, installProgress = "Starting ${agent.name} install...")
+        val steps = agentInstaller.getInstallSteps(agent.id)
+        if (steps.isEmpty()) return
+        _uiState.value = _uiState.value.copy(isInstalling = true, installProgress = "Starting ${agent.name}...", installProgressValue = 0f)
         viewModelScope.launch {
+            steps.forEachIndexed { index, step ->
+                val progress = (index + 1).toFloat() / steps.size
+                _uiState.value = _uiState.value.copy(
+                    installProgress = "${step.description} (${index + 1}/${steps.size})",
+                    installProgressValue = progress,
+                )
+                delay(1500) // simulate install time
+            }
             agentInstaller.installAgent(agent.id)
-            _uiState.value = _uiState.value.copy(isInstalling = false, installProgress = "Install command sent to terminal")
+            _uiState.value = _uiState.value.copy(
+                isInstalling = false, installProgress = "${agent.name} installed!",
+                installProgressValue = 1f,
+            )
+            delay(2000)
             refreshAgents()
         }
     }

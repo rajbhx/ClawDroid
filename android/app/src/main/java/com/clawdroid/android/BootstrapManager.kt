@@ -1,6 +1,7 @@
 package com.clawdroid.android
 
 import android.content.Context
+import com.clawdroid.android.data.PackageInstaller
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
@@ -13,7 +14,7 @@ class BootstrapManager(private val context: Context) {
     companion object {
         private const val TAG = "BootstrapManager"
         private val ELF_SIGNATURE = byteArrayOf(0x7f, 'E'.code.toByte(), 'L'.code.toByte(), 'F'.code.toByte())
-        private const val SYMLINK_SEPARATOR = "\u2190"
+        private const val SYMLINK_SEPARATOR = "←"
         private const val SYMLINK_PARTS_COUNT = 2
     }
 
@@ -52,7 +53,27 @@ class BootstrapManager(private val context: Context) {
         syncWwwFromAssets()
         setupTermuxExec()
 
+        onProgress(0.80f, "Installing core packages...")
+        installCorePackages()
+
         onProgress(1f, "Setup complete")
+    }
+
+    private fun installCorePackages() {
+        val installer = PackageInstaller()
+        val script = installer.getCoreInstallScript()
+        val scriptFile = File(tmpDir, "install-packages.sh")
+        scriptFile.writeText(script)
+        scriptFile.setExecutable(true)
+        try {
+            val process = Runtime.getRuntime().exec(arrayOf(
+                "${prefixDir.absolutePath}/bin/bash",
+                scriptFile.absolutePath,
+            ))
+            process.waitFor()
+        } catch (e: Exception) {
+            AppLogger.w(TAG, "Package install failed (non-fatal)", e)
+        }
     }
 
     private suspend fun getBootstrapStream(onProgress: (Float, String) -> Unit): InputStream {

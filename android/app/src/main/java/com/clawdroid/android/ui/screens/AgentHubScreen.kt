@@ -28,6 +28,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
@@ -38,6 +39,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -73,32 +75,31 @@ fun AgentHubScreen(viewModel: AgentHubViewModel = hiltViewModel()) {
             verticalArrangement = Arrangement.spacedBy(12.dp),
             contentPadding = androidx.compose.foundation.layout.PaddingValues(vertical = 16.dp),
         ) {
-            item {
-                Text("AI Agents", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            }
+            item { Text("AI Agents", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurfaceVariant) }
+
             items(state.agents) { agent ->
-                AgentCard(
-                    agent = agent,
-                    onInstall = { viewModel.installAgent(agent) },
-                    onRun = { prompt -> viewModel.runAgent(agent, prompt) },
-                )
+                AgentCard(agent = agent, onInstall = { viewModel.installAgent(agent) },
+                    onRun = { prompt -> viewModel.runAgent(agent, prompt) })
             }
 
-            // Install progress
+            // Install progress bar
             if (state.isInstalling) {
                 item {
-                    Surface(
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(12.dp),
-                        color = MaterialTheme.colorScheme.primaryContainer,
-                    ) {
-                        Row(
-                            modifier = Modifier.padding(16.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                        ) {
-                            CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
-                            Spacer(Modifier.width(12.dp))
-                            Text(state.installProgress, style = MaterialTheme.typography.bodySmall)
+                    Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp),
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)) {
+                        Column(modifier = Modifier.padding(16.dp)) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
+                                Spacer(Modifier.width(12.dp))
+                                Text(state.installProgress, style = MaterialTheme.typography.bodyMedium)
+                            }
+                            Spacer(Modifier.height(8.dp))
+                            LinearProgressIndicator(
+                                progress = { state.installProgressValue },
+                                modifier = Modifier.fillMaxWidth().height(4.dp),
+                                color = MaterialTheme.colorScheme.primary,
+                                trackColor = MaterialTheme.colorScheme.primaryContainer,
+                            )
                         }
                     }
                 }
@@ -107,24 +108,17 @@ fun AgentHubScreen(viewModel: AgentHubViewModel = hiltViewModel()) {
             // Agent output
             if (state.runOutput.isNotBlank()) {
                 item {
-                    Surface(
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(12.dp),
-                        color = MaterialTheme.colorScheme.surfaceVariant,
-                    ) {
+                    Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp)) {
                         Column(modifier = Modifier.padding(12.dp)) {
                             Text("Terminal Output", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.labelMedium)
                             Spacer(Modifier.height(4.dp))
-                            Text(
-                                state.runOutput.takeLast(2000),
+                            Text(state.runOutput.takeLast(2000),
                                 style = MaterialTheme.typography.bodySmall.copy(fontFamily = FontFamily.Monospace, fontSize = 11.sp),
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            )
+                                color = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
                     }
                 }
             }
-
             item { Spacer(Modifier.height(80.dp)) }
         }
     }
@@ -134,11 +128,9 @@ fun AgentHubScreen(viewModel: AgentHubViewModel = hiltViewModel()) {
 fun AgentCard(agent: AgentInfo, onInstall: () -> Unit, onRun: (String) -> Unit) {
     var showRunDialog by remember { mutableStateOf(false) }
 
-    Card(
-        modifier = Modifier.fillMaxWidth(),
+    Card(modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)),
-        shape = RoundedCornerShape(16.dp),
-    ) {
+        shape = RoundedCornerShape(16.dp)) {
         Column(modifier = Modifier.padding(16.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(Icons.Default.Code, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(32.dp))
@@ -150,11 +142,8 @@ fun AgentCard(agent: AgentInfo, onInstall: () -> Unit, onRun: (String) -> Unit) 
             }
             Spacer(Modifier.height(12.dp))
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Surface(
-                    shape = RoundedCornerShape(12.dp),
-                    color = if (agent.isInstalled) MaterialTheme.colorScheme.tertiaryContainer
-                            else MaterialTheme.colorScheme.surfaceVariant,
-                ) {
+                Surface(shape = RoundedCornerShape(12.dp),
+                    color = if (agent.isInstalled) MaterialTheme.colorScheme.tertiaryContainer else MaterialTheme.colorScheme.surfaceVariant) {
                     Row(modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
                         if (agent.isInstalled) Icon(Icons.Default.CheckCircle, null, modifier = Modifier.size(12.dp), tint = MaterialTheme.colorScheme.tertiary)
                         else Icon(Icons.Default.InstallMobile, null, modifier = Modifier.size(12.dp))
@@ -167,7 +156,6 @@ fun AgentCard(agent: AgentInfo, onInstall: () -> Unit, onRun: (String) -> Unit) 
                 Spacer(Modifier.width(8.dp))
                 Text(agent.language, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.outline)
             }
-
             Spacer(Modifier.height(8.dp))
             Row {
                 if (!agent.isInstalled && agent.installSteps.isNotEmpty()) {
@@ -185,8 +173,6 @@ fun AgentCard(agent: AgentInfo, onInstall: () -> Unit, onRun: (String) -> Unit) 
                     }
                 }
             }
-
-            // Install steps
             AnimatedVisibility(visible = agent.installSteps.isNotEmpty() && !agent.isInstalled) {
                 Column(modifier = Modifier.padding(top = 8.dp)) {
                     Text("Install steps:", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.outline)
@@ -197,29 +183,12 @@ fun AgentCard(agent: AgentInfo, onInstall: () -> Unit, onRun: (String) -> Unit) 
             }
         }
     }
-
     if (showRunDialog) {
         var prompt by remember { mutableStateOf("") }
-        AlertDialog(
-            onDismissRequest = { showRunDialog = false },
-            title = { Text("Run ${agent.name}") },
-            text = {
-                OutlinedTextField(
-                    value = prompt,
-                    onValueChange = { prompt = it },
-                    modifier = Modifier.fillMaxWidth().height(120.dp),
-                    placeholder = { Text("Enter prompt or command...") },
-                )
-            },
-            confirmButton = {
-                TextButton(onClick = {
-                    if (prompt.isNotBlank()) {
-                        onRun(prompt)
-                        showRunDialog = false
-                    }
-                }) { Text("Run") }
-            },
-            dismissButton = { TextButton(onClick = { showRunDialog = false }) { Text("Cancel") } },
-        )
+        AlertDialog(onDismissRequest = { showRunDialog = false }, title = { Text("Run ${agent.name}") },
+            text = { OutlinedTextField(value = prompt, onValueChange = { prompt = it },
+                modifier = Modifier.fillMaxWidth().height(120.dp), placeholder = { Text("Enter prompt...") }) },
+            confirmButton = { TextButton(onClick = { if (prompt.isNotBlank()) { onRun(prompt); showRunDialog = false } }) { Text("Run") } },
+            dismissButton = { TextButton(onClick = { showRunDialog = false }) { Text("Cancel") } })
     }
 }

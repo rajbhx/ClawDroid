@@ -2,7 +2,7 @@ package com.clawdroid.android.ui.navigation
 
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Chat
+import androidx.compose.material.icons.filled.Dashboard
 import androidx.compose.material.icons.filled.Code
 import androidx.compose.material.icons.filled.Memory
 import androidx.compose.material.icons.filled.Router
@@ -24,6 +24,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.clawdroid.android.ui.screens.AgentHubScreen
 import com.clawdroid.android.ui.screens.ChatScreen
+import com.clawdroid.android.ui.screens.DashboardScreen
 import com.clawdroid.android.ui.screens.MemoryScreen
 import com.clawdroid.android.ui.screens.SettingsScreen
 import com.clawdroid.android.ui.screens.TerminalScreen
@@ -31,8 +32,8 @@ import com.clawdroid.android.ui.screens.TerminalScreen
 data class NavItem(val screen: Screen, val label: String, val icon: ImageVector)
 
 val navItems = listOf(
-    NavItem(Screen.Chat, "Chat", Icons.Default.Chat),
-    NavItem(Screen.Terminal, "Terminal", Icons.Default.Code),
+    NavItem(Screen.Dashboard, "Home", Icons.Default.Dashboard),
+    NavItem(Screen.Terminal, "Shell", Icons.Default.Code),
     NavItem(Screen.Agents, "Agents", Icons.Default.Router),
     NavItem(Screen.Memory, "Memory", Icons.Default.Memory),
     NavItem(Screen.Settings, "Settings", Icons.Default.Settings),
@@ -66,9 +67,10 @@ fun ClawdroidNavGraph() {
     ) { paddingValues ->
         NavHost(
             navController = navController,
-            startDestination = Screen.Chat.route,
+            startDestination = Screen.Dashboard.route,
             modifier = Modifier.padding(paddingValues),
         ) {
+            composable(Screen.Dashboard.route) { DashboardScreen() }
             composable(Screen.Chat.route) { ChatScreen() }
             composable(Screen.Terminal.route) { TerminalScreen() }
             composable(Screen.Agents.route) { AgentHubScreen() }
