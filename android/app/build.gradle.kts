@@ -112,7 +112,6 @@ dependencies {
     implementation(libs.lifecycle.viewmodel.compose)
     implementation(libs.lifecycle.runtime.compose)
     implementation(libs.hilt.navigation.compose)
-    implementation(libs.markcompose)
     debugImplementation(libs.compose.ui.tooling)
 
     // Core Android
