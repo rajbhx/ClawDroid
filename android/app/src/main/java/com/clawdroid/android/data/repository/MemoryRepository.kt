@@ -23,7 +23,7 @@ class MemoryRepository @Inject constructor(
         // Try to generate embedding asynchronously
         val embedding = embeddingService.embed(memory.content)
         if (embedding != null) {
-            memoryDao.updateEmbedding(id, embedding.toByteArray())
+            memoryDao.updateEmbedding(id, floatArrayToBytes(embedding))
         }
         return id
     }

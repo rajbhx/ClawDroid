@@ -15,7 +15,7 @@ import androidx.compose.material.icons.filled.BrightnessMedium
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Code
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Gpu
+import androidx.compose.material.icons.filled.PhoneAndroid
 import androidx.compose.material.icons.filled.Security
 import androidx.compose.material.icons.filled.Speed
 import androidx.compose.material.icons.filled.TextFields
@@ -90,7 +90,7 @@ fun SettingsScreen(viewModel: SettingsViewModel = hiltViewModel()) {
             item {
                 SettingsSection("Hardware Acceleration") {
                     SettingsItem(
-                        icon = Icons.Default.Gpu,
+                        icon = Icons.Default.PhoneAndroid,
                         title = "GPU Status",
                         subtitle = gpuInfo.method,
                         trailing = {
