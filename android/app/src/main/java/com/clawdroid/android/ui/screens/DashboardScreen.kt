@@ -19,7 +19,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Chat
 import androidx.compose.material.icons.filled.Code
-import androidx.compose.material.icons.filled.Gpu
+import androidx.compose.material.icons.filled.PhoneAndroid
 import androidx.compose.material.icons.filled.Memory
 import androidx.compose.material.icons.filled.Router
 import androidx.compose.material.icons.filled.Speed
