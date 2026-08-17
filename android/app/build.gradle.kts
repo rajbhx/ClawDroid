@@ -3,7 +3,8 @@ import java.util.Properties
 plugins {
     alias(libs.plugins.androidApplication)
     alias(libs.plugins.kotlinAndroid)
-    kotlin("kapt")
+    alias(libs.plugins.hilt)
+    alias(libs.plugins.ksp)
 }
 
 android {
@@ -36,6 +37,7 @@ android {
         )
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        vectorDrawables { useSupportLibrary = true }
     }
 
     signingConfigs {
@@ -78,8 +80,13 @@ android {
     }
 
     buildFeatures {
+        compose = true
         viewBinding = true
         buildConfig = true
+    }
+
+    composeOptions {
+        kotlinCompilerExtensionVersion = "1.5.8"
     }
 
     packaging {
@@ -89,9 +96,27 @@ android {
 }
 
 dependencies {
+    // Terminal modules
     implementation(project(":terminal-emulator"))
     implementation(project(":terminal-view"))
 
+    // Compose
+    implementation(platform(libs.compose.bom))
+    implementation(libs.compose.ui)
+    implementation(libs.compose.ui.graphics)
+    implementation(libs.compose.ui.tooling.preview)
+    implementation(libs.compose.material3)
+    implementation(libs.compose.material.icons)
+    implementation(libs.compose.runtime)
+    implementation(libs.activity.compose)
+    implementation(libs.navigation.compose)
+    implementation(libs.lifecycle.viewmodel.compose)
+    implementation(libs.lifecycle.runtime.compose)
+    implementation(libs.hilt.navigation.compose)
+    implementation(libs.markcompose)
+    debugImplementation(libs.compose.ui.tooling)
+
+    // Core Android
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
     implementation(libs.material)
@@ -99,14 +124,19 @@ dependencies {
     implementation(libs.kotlinx.coroutines.android)
     implementation(libs.androidx.lifecycle.runtime.ktx)
 
+    // Hilt
+    implementation(libs.hilt.android)
+    ksp(libs.hilt.compiler)
+
     // Room (memory database)
     implementation(libs.room.runtime)
     implementation(libs.room.ktx)
-    kapt(libs.room.compiler)
+    ksp(libs.room.compiler)
 
-    // OkHttp (provider routing)
+    // OkHttp (provider routing + SSE)
     implementation(libs.okhttp)
     implementation(libs.okhttp.sse)
+    implementation(libs.okhttp.logging)
 
     // ONNX Runtime (embeddings)
     implementation(libs.onnxruntime)
@@ -114,6 +144,9 @@ dependencies {
     // JSON
     implementation(libs.gson)
     implementation(libs.serialization.json)
+
+    // DataStore (settings)
+    implementation(libs.datastore.preferences)
 
     // Tests
     testImplementation(libs.junit)
