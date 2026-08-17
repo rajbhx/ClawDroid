@@ -15,7 +15,9 @@ import androidx.compose.material.icons.filled.BrightnessMedium
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Code
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Gpu
 import androidx.compose.material.icons.filled.Security
+import androidx.compose.material.icons.filled.Speed
 import androidx.compose.material.icons.filled.TextFields
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
@@ -26,7 +28,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Slider
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -51,14 +53,12 @@ fun SettingsScreen(viewModel: SettingsViewModel = hiltViewModel()) {
     val fontSize by viewModel.fontSize.collectAsState()
     val providerKeys by viewModel.providerKeys.collectAsState()
     val systemPrompt by viewModel.systemPrompt.collectAsState()
+    val gpuInfo by viewModel.gpuInfo.collectAsState()
     var showThemeDialog by remember { mutableStateOf(false) }
-    var showProviderDialog by remember { mutableStateOf(false) }
     var showPromptDialog by remember { mutableStateOf(false) }
 
     Scaffold(
-        topBar = {
-            TopAppBar(title = { Text("Settings", fontWeight = FontWeight.Bold) })
-        },
+        topBar = { TopAppBar(title = { Text("Settings", fontWeight = FontWeight.Bold) }) },
     ) { padding ->
         LazyColumn(
             modifier = Modifier
@@ -68,7 +68,7 @@ fun SettingsScreen(viewModel: SettingsViewModel = hiltViewModel()) {
             verticalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(8.dp),
             contentPadding = androidx.compose.foundation.layout.PaddingValues(vertical = 16.dp),
         ) {
-            // Theme section
+            // Theme
             item {
                 SettingsSection("Appearance") {
                     SettingsItem(
@@ -86,7 +86,44 @@ fun SettingsScreen(viewModel: SettingsViewModel = hiltViewModel()) {
                 }
             }
 
-            // Providers section
+            // GPU
+            item {
+                SettingsSection("Hardware Acceleration") {
+                    SettingsItem(
+                        icon = Icons.Default.Gpu,
+                        title = "GPU Status",
+                        subtitle = gpuInfo.method,
+                        trailing = {
+                            androidx.compose.material3.Surface(
+                                shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp),
+                                color = if (gpuInfo.isAvailable) MaterialTheme.colorScheme.tertiaryContainer
+                                        else MaterialTheme.colorScheme.errorContainer,
+                            ) {
+                                Text(
+                                    if (gpuInfo.isAvailable) "Active" else "Software",
+                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                                    style = MaterialTheme.typography.labelSmall,
+                                )
+                            }
+                        },
+                        onClick = {},
+                    )
+                    SettingsItem(
+                        icon = Icons.Default.Speed,
+                        title = "GPU Acceleration",
+                        subtitle = if (gpuInfo.isAvailable) "Turnip/VirGL enabled" else "LLVMpipe fallback",
+                        trailing = {
+                            Switch(
+                                checked = gpuInfo.isAvailable,
+                                onCheckedChange = { /* TODO: toggle GPU mode */ },
+                            )
+                        },
+                        onClick = {},
+                    )
+                }
+            }
+
+            // Providers
             item {
                 SettingsSection("Providers") {
                     providerKeys.forEach { key ->
@@ -104,7 +141,7 @@ fun SettingsScreen(viewModel: SettingsViewModel = hiltViewModel()) {
                     }
                     if (providerKeys.isEmpty()) {
                         Text(
-                            "No providers configured. Add an API key to get started.",
+                            "No providers configured. Add an API key in Chat to get started.",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.outline,
                             modifier = Modifier.padding(12.dp),
@@ -139,7 +176,6 @@ fun SettingsScreen(viewModel: SettingsViewModel = hiltViewModel()) {
         }
     }
 
-    // Theme dialog
     if (showThemeDialog) {
         AlertDialog(
             onDismissRequest = { showThemeDialog = false },
@@ -154,7 +190,6 @@ fun SettingsScreen(viewModel: SettingsViewModel = hiltViewModel()) {
         )
     }
 
-    // System prompt dialog
     if (showPromptDialog) {
         var promptText by remember { mutableStateOf(systemPrompt) }
         AlertDialog(

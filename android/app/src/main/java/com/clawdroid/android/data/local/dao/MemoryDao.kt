@@ -22,6 +22,9 @@ interface MemoryDao {
     @Query("SELECT * FROM memories WHERE id = :id")
     suspend fun getById(id: Long): MemoryEntry?
 
+    @Query("SELECT * FROM memories ORDER BY updatedAt DESC")
+    suspend fun getAllOnce(): List<MemoryEntry>
+
     @Insert
     suspend fun insert(memory: MemoryEntry): Long
 
@@ -33,4 +36,7 @@ interface MemoryDao {
 
     @Query("DELETE FROM memories WHERE id = :id")
     suspend fun deleteById(id: Long)
+
+    @Query("UPDATE memories SET embedding = :embedding WHERE id = :id")
+    suspend fun updateEmbedding(id: Long, embedding: ByteArray)
 }

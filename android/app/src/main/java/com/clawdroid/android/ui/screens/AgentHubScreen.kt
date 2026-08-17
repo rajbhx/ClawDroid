@@ -1,9 +1,7 @@
 package com.clawdroid.android.ui.screens
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -20,26 +18,35 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Code
 import androidx.compose.material.icons.filled.InstallMobile
+import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.clawdroid.android.viewmodel.AgentHubViewModel
 import com.clawdroid.android.viewmodel.AgentInfo
@@ -62,50 +69,79 @@ fun AgentHubScreen(viewModel: AgentHubViewModel = hiltViewModel()) {
         },
     ) { padding ->
         LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-                .padding(horizontal = 16.dp),
+            modifier = Modifier.fillMaxSize().padding(padding).padding(horizontal = 16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
             contentPadding = androidx.compose.foundation.layout.PaddingValues(vertical = 16.dp),
         ) {
             item {
-                Text(
-                    "AI Agents",
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(bottom = 4.dp),
+                Text("AI Agents", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+            items(state.agents) { agent ->
+                AgentCard(
+                    agent = agent,
+                    onInstall = { viewModel.installAgent(agent) },
+                    onRun = { prompt -> viewModel.runAgent(agent, prompt) },
                 )
             }
 
-            items(state.agents) { agent ->
-                AgentCard(agent = agent)
+            // Install progress
+            if (state.isInstalling) {
+                item {
+                    Surface(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(12.dp),
+                        color = MaterialTheme.colorScheme.primaryContainer,
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(16.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
+                            Spacer(Modifier.width(12.dp))
+                            Text(state.installProgress, style = MaterialTheme.typography.bodySmall)
+                        }
+                    }
+                }
             }
 
-            item {
-                Spacer(Modifier.height(80.dp))
+            // Agent output
+            if (state.runOutput.isNotBlank()) {
+                item {
+                    Surface(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(12.dp),
+                        color = MaterialTheme.colorScheme.surfaceVariant,
+                    ) {
+                        Column(modifier = Modifier.padding(12.dp)) {
+                            Text("Terminal Output", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.labelMedium)
+                            Spacer(Modifier.height(4.dp))
+                            Text(
+                                state.runOutput.takeLast(2000),
+                                style = MaterialTheme.typography.bodySmall.copy(fontFamily = FontFamily.Monospace, fontSize = 11.sp),
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
+                    }
+                }
             }
+
+            item { Spacer(Modifier.height(80.dp)) }
         }
     }
 }
 
 @Composable
-fun AgentCard(agent: AgentInfo) {
+fun AgentCard(agent: AgentInfo, onInstall: () -> Unit, onRun: (String) -> Unit) {
+    var showRunDialog by remember { mutableStateOf(false) }
+
     Card(
         modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
-        ),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)),
         shape = RoundedCornerShape(16.dp),
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(
-                    Icons.Default.Code,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(32.dp),
-                )
+                Icon(Icons.Default.Code, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(32.dp))
                 Spacer(Modifier.width(12.dp))
                 Column(modifier = Modifier.weight(1f)) {
                     Text(agent.name, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
@@ -119,20 +155,11 @@ fun AgentCard(agent: AgentInfo) {
                     color = if (agent.isInstalled) MaterialTheme.colorScheme.tertiaryContainer
                             else MaterialTheme.colorScheme.surfaceVariant,
                 ) {
-                    Row(
-                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        if (agent.isInstalled) {
-                            Icon(Icons.Default.CheckCircle, null, modifier = Modifier.size(12.dp), tint = MaterialTheme.colorScheme.tertiary)
-                        } else {
-                            Icon(Icons.Default.InstallMobile, null, modifier = Modifier.size(12.dp))
-                        }
+                    Row(modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+                        if (agent.isInstalled) Icon(Icons.Default.CheckCircle, null, modifier = Modifier.size(12.dp), tint = MaterialTheme.colorScheme.tertiary)
+                        else Icon(Icons.Default.InstallMobile, null, modifier = Modifier.size(12.dp))
                         Spacer(Modifier.width(4.dp))
-                        Text(
-                            if (agent.isInstalled) "Installed" else "Not installed",
-                            style = MaterialTheme.typography.labelSmall,
-                        )
+                        Text(if (agent.isInstalled) "Installed" else "Not installed", style = MaterialTheme.typography.labelSmall)
                     }
                 }
                 Spacer(Modifier.weight(1f))
@@ -140,6 +167,59 @@ fun AgentCard(agent: AgentInfo) {
                 Spacer(Modifier.width(8.dp))
                 Text(agent.language, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.outline)
             }
+
+            Spacer(Modifier.height(8.dp))
+            Row {
+                if (!agent.isInstalled && agent.installSteps.isNotEmpty()) {
+                    FilledTonalButton(onClick = onInstall) {
+                        Icon(Icons.Default.InstallMobile, null, modifier = Modifier.size(16.dp))
+                        Spacer(Modifier.width(4.dp))
+                        Text("Install", style = MaterialTheme.typography.labelMedium)
+                    }
+                }
+                if (agent.isInstalled) {
+                    FilledTonalButton(onClick = { showRunDialog = true }) {
+                        Icon(Icons.Default.PlayArrow, null, modifier = Modifier.size(16.dp))
+                        Spacer(Modifier.width(4.dp))
+                        Text("Run", style = MaterialTheme.typography.labelMedium)
+                    }
+                }
+            }
+
+            // Install steps
+            AnimatedVisibility(visible = agent.installSteps.isNotEmpty() && !agent.isInstalled) {
+                Column(modifier = Modifier.padding(top = 8.dp)) {
+                    Text("Install steps:", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.outline)
+                    agent.installSteps.forEach { step ->
+                        Text("  • $step", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.outline)
+                    }
+                }
+            }
         }
+    }
+
+    if (showRunDialog) {
+        var prompt by remember { mutableStateOf("") }
+        AlertDialog(
+            onDismissRequest = { showRunDialog = false },
+            title = { Text("Run ${agent.name}") },
+            text = {
+                OutlinedTextField(
+                    value = prompt,
+                    onValueChange = { prompt = it },
+                    modifier = Modifier.fillMaxWidth().height(120.dp),
+                    placeholder = { Text("Enter prompt or command...") },
+                )
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    if (prompt.isNotBlank()) {
+                        onRun(prompt)
+                        showRunDialog = false
+                    }
+                }) { Text("Run") }
+            },
+            dismissButton = { TextButton(onClick = { showRunDialog = false }) { Text("Cancel") } },
+        )
     }
 }

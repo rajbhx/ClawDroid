@@ -7,6 +7,10 @@
         <item name="android:windowBackground">@color/terminalBackground</item>
         <item name="android:statusBarColor">@color/primaryDark</item>
     </style>
+    <style name="SplashTheme" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+        <item name="android:windowBackground">@color/primaryDark</item>
+        <item name="android:statusBarColor">@color/primaryDark</item>
+    </style>
     <style name="ExtraKeyButton" parent="Widget.MaterialComponents.Button.TextButton">
         <item name="android:textColor">@color/extraKeyText</item>
         <item name="android:textSize">11sp</item>
